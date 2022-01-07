@@ -1,0 +1,4 @@
+format.c:15:6:reverse	32	static
+format.c:33:5:itostr	32	static
+format.c:52:6:ftoa	48	static
+format.c:63:10:u32tou8	16	static

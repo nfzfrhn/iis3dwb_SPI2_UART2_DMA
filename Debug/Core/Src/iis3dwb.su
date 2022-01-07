@@ -1,0 +1,4 @@
+iis3dwb.c:18:9:IIS3DWB_READ_REG	24	static
+iis3dwb.c:39:9:IIS3DWB_WRITE_REG	24	static
+iis3dwb.c:54:6:IIS3DWB_CS_HIGH	8	static
+iis3dwb.c:64:6:IIS3DWB_CS_LOW	8	static
