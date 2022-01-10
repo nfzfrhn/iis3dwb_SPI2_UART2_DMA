@@ -7,4 +7,4 @@ main.c:294:13:MX_DMA_Init	16	static
 main.c:313:13:MX_GPIO_Init	56	static
 main.c:380:6:HAL_TIM_PeriodElapsedCallback	16	static
 main.c:388:6:HAL_GPIO_EXTI_Callback	16	static
-main.c:400:6:Error_Handler	4	static,ignoring_inline_asm
+main.c:401:6:Error_Handler	4	static,ignoring_inline_asm

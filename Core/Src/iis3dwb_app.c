@@ -42,11 +42,22 @@ void static IIS3DWB_SET_CONFIG(){
 	//Get device ID
 	iis3dwb_device_id_get(&dev_ctx, &iis3dwb_deviceID);
 	//reset software in ctrl3_c
-	iis3dwb_reset_set(&dev_ctx, PROPERTY_ENABLE);
+	//iis3dwb_reset_set(&dev_ctx, PROPERTY_ENABLE);
+	iis3dwb_reset_set(&dev_ctx, 1);
 	//continue after reset is finished
 	do{
 		iis3dwb_reset_get(&dev_ctx, &rst);
 	}while(rst);
+
+	//Set the INT1_CTRL register with bit INT1_DRDY_XL:1
+//    iis3dwb_pin_int1_route_t pin_int1_route;
+//    *(uint8_t*)&(pin_int1_route.int1_ctrl) = 0;
+//    *(uint8_t*)&(pin_int1_route.md1_cfg) = 0;
+//    pin_int1_route.int1_ctrl.int1_drdy_xl = 1;
+//    iis3dwb_pin_int1_route_set(&dev_ctx, &pin_int1_route);
+
+    //Select all 3-axis
+    iis3dwb_xl_axis_selection_set(&dev_ctx, IIS3DWB_ENABLE_ALL);
 
     // 3. Enables accelerometer:IIS3DWB_CTRL1_XL bit 7:5 XL_EN[2:0]
     /*(000: Power-down (default);
@@ -73,7 +84,8 @@ void static IIS3DWB_SET_CONFIG(){
     //COUNTER_BDR_REG1 (0Bh) bit 7 dataready_pulsed
     //0: Data-ready latched mode
     //1: Data-ready pulsed mode (the data ready pulses are 18.75 �s long)
-    iis3dwb_data_ready_mode_set(&dev_ctx, IIS3DWB_DRDY_PULSED);
+    //iis3dwb_data_ready_mode_set(&dev_ctx, IIS3DWB_DRDY_PULSED);			//Original config
+    iis3dwb_data_ready_mode_set(&dev_ctx, IIS3DWB_DRDY_LATCHED );			//Changed to be observed
 
     //8. Set full scale
     /* CTRL1_XL (10h) bit 3:2  00 (default) �2 g  01 �16 g 10 �4 g 11 �8 g*/
@@ -114,20 +126,21 @@ void static IIS3DWB_SET_CONFIG(){
      * */
     iis3dwb_fifo_xl_batch_set(&dev_ctx, IIS3DWB_XL_BATCHED_AT_26k7Hz);
 
-	iis3dwb_xl_axis_selection_set(&dev_ctx, IIS3DWB_ENABLE_ALL);
-	//enable block data update
-	iis3dwb_block_data_update_set(&dev_ctx, PROPERTY_ENABLE);
+
+	//Register CTRL3_C bit BDU: Disable block data update
+	iis3dwb_block_data_update_set(&dev_ctx, PROPERTY_DISABLE);
+
 	//set output data rate - enable acc
 	iis3dwb_xl_data_rate_set(&dev_ctx, IIS3DWB_XL_ODR_26k7Hz);
 
 	//enable auto increment
 	iis3dwb_auto_increment_set(&dev_ctx, PROPERTY_ENABLE);
 	//enable fifo bypass mode
-	iis3dwb_fifo_mode_set(&dev_ctx,IIS3DWB_BYPASS_MODE);
+	//iis3dwb_fifo_mode_set(&dev_ctx,IIS3DWB_BYPASS_MODE);
 	//use LP filter
 	iis3dwb_xl_filter_lp2_set(&dev_ctx, PROPERTY_ENABLE);
 	//enable all axis
-	iis3dwb_xl_axis_selection_set(&dev_ctx,IIS3DWB_ENABLE_ALL);
+	//iis3dwb_xl_axis_selection_set(&dev_ctx,IIS3DWB_ENABLE_ALL);
 }
 
 void IIS3DWB_MEASSURE(){
