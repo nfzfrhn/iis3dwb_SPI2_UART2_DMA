@@ -84,8 +84,8 @@ void static IIS3DWB_SET_CONFIG(){
     //COUNTER_BDR_REG1 (0Bh) bit 7 dataready_pulsed
     //0: Data-ready latched mode
     //1: Data-ready pulsed mode (the data ready pulses are 18.75 �s long)
-    //iis3dwb_data_ready_mode_set(&dev_ctx, IIS3DWB_DRDY_PULSED);			//Original config
-    iis3dwb_data_ready_mode_set(&dev_ctx, IIS3DWB_DRDY_LATCHED );			//Changed to be observed
+    iis3dwb_data_ready_mode_set(&dev_ctx, IIS3DWB_DRDY_PULSED);			//Original config
+    //iis3dwb_data_ready_mode_set(&dev_ctx, IIS3DWB_DRDY_LATCHED );			//Changed to be observed
 
     //8. Set full scale
     /* CTRL1_XL (10h) bit 3:2  00 (default) �2 g  01 �16 g 10 �4 g 11 �8 g*/
@@ -136,7 +136,7 @@ void static IIS3DWB_SET_CONFIG(){
 	//enable auto increment
 	iis3dwb_auto_increment_set(&dev_ctx, PROPERTY_ENABLE);
 	//enable fifo bypass mode
-	//iis3dwb_fifo_mode_set(&dev_ctx,IIS3DWB_BYPASS_MODE);
+	iis3dwb_fifo_mode_set(&dev_ctx,IIS3DWB_BYPASS_MODE);
 	//use LP filter
 	iis3dwb_xl_filter_lp2_set(&dev_ctx, PROPERTY_ENABLE);
 	//enable all axis

@@ -108,7 +108,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  IIS3DWB_MEASSURE();
+	  //IIS3DWB_MEASSURE();
+
 	  //HAL_GPIO_TogglePin(LED1_GPIO_Port , LED1_Pin );
 	  //char wakeUp [] = {"MCU "};
 	  //HAL_UART_Transmit(&huart2, (uint8_t *) wakeUp, sizeof(wakeUp), HAL_MAX_DELAY);
@@ -387,9 +388,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin==SPI_INT1_Pin){
-		HAL_GPIO_TogglePin(LED1_GPIO_Port , LED1_Pin );
+		//HAL_GPIO_TogglePin(LED1_GPIO_Port , LED1_Pin );
 		//HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
 		//HAL_UART_Transmit(&huart2, (uint8_t*)msg_0, sizeof(msg_0), HAL_MAX_DELAY);
+		IIS3DWB_MEASSURE();
 	}
 }
 /* USER CODE END 4 */
