@@ -9,17 +9,43 @@
 /* Declares ------------------------------------------------------------------------- */
 void static IIS3DWB_SET_CONFIG();
 extern UART_HandleTypeDef huart2;
+static uint8_t iis3dwb_mem[IIS3DWB_SAMPLES_PER_IT * 7];
+
+int16_t tmp_1[3] = { 0 };
+int16_t tmp_2 = 0;
+
+int16_t tmpX[128] = {0};
+int16_t tmpY[128] = {0};
+int16_t tmpZ[128] = {0};
+
+//char msg_0[10] = {'\0'};
+//msg_0[9] = '\n';
+//char msg_1[10] = {'\0'};
+//msg_1[9] = '\n';
+//char msg_2[10] = {'\0'};
+//msg_2[9] = '\n';
+
+//init driver interface
+//neccessary for iis3dwb driver (iis3dwb_reg)
+stmdev_ctx_t dev_ctx;
+volatile uint8_t reg0;
+volatile uint8_t reg1;
+volatile uint16_t fifo_level = 0;
+
+//dev_ctx.read_reg = IIS3DWB_READ_REG;
+//dev_ctx.write_reg = IIS3DWB_WRITE_REG;
+//dev_ctx.handle = &spi_iis3dwb;
 
 /* Functions ------------------------------------------------------------------------ */
 //Function:	Set-Function for the configuration of the IIS3DWB-sensor
 void static IIS3DWB_SET_CONFIG(){
 	uint8_t rst;
 
-	//init driver interface
-	//neccessary for iis3dwb driver (iis3dwb_reg)
-	stmdev_ctx_t dev_ctx;
-	uint8_t reg0;
-
+//	//init driver interface
+//	//neccessary for iis3dwb driver (iis3dwb_reg)
+//	stmdev_ctx_t dev_ctx;
+//	uint8_t reg0;
+//
 	dev_ctx.read_reg = IIS3DWB_READ_REG;
 	dev_ctx.write_reg = IIS3DWB_WRITE_REG;
 	dev_ctx.handle = &spi_iis3dwb;
@@ -107,17 +133,7 @@ void static IIS3DWB_SET_CONFIG(){
     **/
     iis3dwb_xl_hp_path_on_out_set(&dev_ctx,IIS3DWB_LP_ODR_DIV_20);
 
-    // 10. FIFO_WTM_IA routing on pin INT1
-    /* INT1_CTRL (0Dh) bit 3 Set to 1
-     * INT1_FIFO_TH Enables FIFO threshold interrupt on INT1 pin.
-     *
-     * MD1_CFG (5Eh) Functions routing on INT1 register (r/w) disabled
-     *  */
-    iis3dwb_pin_int1_route_t pin_int1_route;
-    *(uint8_t*)&(pin_int1_route.int1_ctrl) = 0;
-    *(uint8_t*)&(pin_int1_route.md1_cfg) = 0;
-    pin_int1_route.int1_ctrl.int1_fifo_th = 1;
-    iis3dwb_pin_int1_route_set(&dev_ctx, &pin_int1_route);
+
 
     //11. Enable writing to FIFO
     /* FIFO_CTRL3 (09h) bit 3:0 Selects Batch Data Rate (write frequency in FIFO) for accelerometer data.
@@ -128,7 +144,7 @@ void static IIS3DWB_SET_CONFIG(){
 
 
 	//Register CTRL3_C bit BDU: Disable block data update
-	iis3dwb_block_data_update_set(&dev_ctx, PROPERTY_DISABLE);
+	iis3dwb_block_data_update_set(&dev_ctx, PROPERTY_ENABLE);
 
 	//set output data rate - enable acc
 	iis3dwb_xl_data_rate_set(&dev_ctx, IIS3DWB_XL_ODR_26k7Hz);
@@ -141,12 +157,26 @@ void static IIS3DWB_SET_CONFIG(){
 	iis3dwb_xl_filter_lp2_set(&dev_ctx, PROPERTY_ENABLE);
 	//enable all axis
 	//iis3dwb_xl_axis_selection_set(&dev_ctx,IIS3DWB_ENABLE_ALL);
+
+    // 10. FIFO_WTM_IA routing on pin INT1
+    /* INT1_CTRL (0Dh) bit 3 Set to 1
+     * INT1_FIFO_TH Enables FIFO threshold interrupt on INT1 pin.
+     *
+     * MD1_CFG (5Eh) Functions routing on INT1 register (r/w) disabled
+     *  */
+    iis3dwb_pin_int1_route_t pin_int1_route;
+    *(uint8_t*)&(pin_int1_route.int1_ctrl) = 0;
+    *(uint8_t*)&(pin_int1_route.md1_cfg) = 0;
+    pin_int1_route.int1_ctrl.int1_drdy_xl = 1;
+    iis3dwb_pin_int1_route_set(&dev_ctx, &pin_int1_route);
+
+    HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
 void IIS3DWB_MEASSURE(){
-	int16_t tmp_1[3] = { 0 };
-	int16_t tmp_2 = 0;
-
+//	int16_t tmp_1[3] = { 0 };
+//	int16_t tmp_2 = 0;
+//
 	char msg_0[10] = {'\0'};
 	msg_0[9] = '\n';
 	char msg_1[10] = {'\0'};
@@ -182,13 +212,45 @@ void IIS3DWB_MEASSURE(){
 		acceleration_mg[1] = iis3dwb_from_fs2g_to_mg(tmp_1[1]);
 		acceleration_mg[2] = iis3dwb_from_fs2g_to_mg(tmp_1[2]);
 
-		ftoa(acceleration_mg[0], msg_0, 2);
-		HAL_UART_Transmit(&huart2, (uint8_t*)msg_0, sizeof(msg_0), HAL_MAX_DELAY);
-		ftoa(acceleration_mg[1], msg_1, 2);
-		HAL_UART_Transmit(&huart2, (uint8_t*)msg_1, sizeof(msg_1), HAL_MAX_DELAY);
-		ftoa(acceleration_mg[2], msg_2, 2);
-		HAL_UART_Transmit(&huart2, (uint8_t*)msg_2, sizeof(msg_2), HAL_MAX_DELAY);
+//		ftoa(acceleration_mg[0], msg_0, 2);
+//		HAL_UART_Transmit(&huart2, (uint8_t*)msg_0, sizeof(msg_0), HAL_MAX_DELAY);
+//		ftoa(acceleration_mg[1], msg_1, 2);
+//		HAL_UART_Transmit(&huart2, (uint8_t*)msg_1, sizeof(msg_1), HAL_MAX_DELAY);
+//		ftoa(acceleration_mg[2], msg_2, 2);
+//		HAL_UART_Transmit(&huart2, (uint8_t*)msg_2, sizeof(msg_2), HAL_MAX_DELAY);
 	}
+}
+
+void IIS3DWB_Int_Measure(){
+	stmdev_ctx_t dev_ctx;
+	dev_ctx.read_reg = IIS3DWB_READ_REG;
+	dev_ctx.write_reg = IIS3DWB_WRITE_REG;
+	dev_ctx.handle = &spi_iis3dwb;
+
+    iis3dwb_read_reg(&dev_ctx, IIS3DWB_FIFO_STATUS1, &reg0, 1);
+    iis3dwb_read_reg(&dev_ctx, IIS3DWB_FIFO_STATUS2, &reg1, 1);
+    fifo_level = ((reg1 & 0x03) << 8) + reg0;
+
+    uint16_t i = 0;
+    uint8_t mem_X[2] = {0};
+//    iis3dwb_read_reg(&dev_ctx, IIS3DWB_FIFO_DATA_OUT_X_L, (uint8_t *)iis3dwb_mem, IIS3DWB_SAMPLES_PER_IT * 7);
+    iis3dwb_read_reg(&dev_ctx, IIS3DWB_FIFO_DATA_OUT_X_L, (uint8_t *)mem_X, 2);
+
+//    int16_t * p16src = (int16_t *)iis3dwb_mem;
+//    int16_t * p16dest = (int16_t *)iis3dwb_mem;
+//    for (i = 0; i < IIS3DWB_SAMPLES_PER_IT; i++)
+//    {
+//      p16src = (int16_t *)&((uint8_t *)(p16src))[1];
+//      tmpX[i] = *p16src++;
+//      tmpY[i] = *p16src++;
+//      tmpZ[i] = *p16src++;
+//    }
+
+    HAL_UART_Transmit(&huart2, (uint8_t*)mem_X[0], sizeof(mem_X[0]), HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart2, (uint8_t*)mem_X[1], sizeof(mem_X[1]), HAL_MAX_DELAY);
+//    HAL_UART_Transmit(&huart2, (uint8_t*)tmpY[0], sizeof(tmpY[0]), HAL_MAX_DELAY);
+//    HAL_UART_Transmit(&huart2, (uint8_t*)tmpZ[0], sizeof(tmpZ[0]), HAL_MAX_DELAY);
+//    tmp_2 = (int16_t*) iis3dwb[];
 }
 
 //Function:	Init-Function for the IIS3DWB-sensor

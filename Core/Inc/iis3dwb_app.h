@@ -13,6 +13,8 @@
 #include "format.h"
 //#include "main.h"
 
+#define IIS3DWB_SAMPLES_PER_IT  (128)
+
 /* Variables ------------------------------------------------------------------------ */
 //ToDo: Reduce global variables
 SPI_HandleTypeDef spi_iis3dwb;
@@ -30,5 +32,6 @@ float acceleration_mg[3];
 
 void IIS3DWB_INIT(SPI_HandleTypeDef spi, GPIO_TypeDef *GPIOx, uint16_t GPIO_PIN);
 void IIS3DWB_MEASSURE();
+void IIS3DWB_Int_Measure();
 
 #endif /* INC_IIS3DWB_APP_H_ */

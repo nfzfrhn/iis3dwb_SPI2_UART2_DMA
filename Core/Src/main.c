@@ -114,6 +114,7 @@ int main(void)
 	  //char wakeUp [] = {"MCU "};
 	  //HAL_UART_Transmit(&huart2, (uint8_t *) wakeUp, sizeof(wakeUp), HAL_MAX_DELAY);
 	  //HAL_Delay(500);
+	  IIS3DWB_Int_Measure();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -371,7 +372,7 @@ static void MX_GPIO_Init(void)
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+//  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 
@@ -391,7 +392,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		//HAL_GPIO_TogglePin(LED1_GPIO_Port , LED1_Pin );
 		//HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
 		//HAL_UART_Transmit(&huart2, (uint8_t*)msg_0, sizeof(msg_0), HAL_MAX_DELAY);
-		IIS3DWB_MEASSURE();
+		//IIS3DWB_MEASSURE();
+		IIS3DWB_Int_Measure();
 	}
 }
 /* USER CODE END 4 */

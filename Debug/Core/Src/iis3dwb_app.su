@@ -1,3 +1,4 @@
-iis3dwb_app.c:15:13:IIS3DWB_SET_CONFIG	32	static
-iis3dwb_app.c:146:6:IIS3DWB_MEASSURE	64	static
-iis3dwb_app.c:198:6:IIS3DWB_INIT	8	static
+iis3dwb_app.c:41:13:IIS3DWB_SET_CONFIG	16	static
+iis3dwb_app.c:176:6:IIS3DWB_MEASSURE	56	static
+iis3dwb_app.c:224:6:IIS3DWB_Int_Measure	32	static
+iis3dwb_app.c:260:6:IIS3DWB_INIT	8	static
