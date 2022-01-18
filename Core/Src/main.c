@@ -48,7 +48,7 @@ TIM_HandleTypeDef htim17;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+bool int1_flag = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -114,7 +114,12 @@ int main(void)
 	  //char wakeUp [] = {"MCU "};
 	  //HAL_UART_Transmit(&huart2, (uint8_t *) wakeUp, sizeof(wakeUp), HAL_MAX_DELAY);
 	  //HAL_Delay(500);
-	  IIS3DWB_Int_Measure();
+	  //checkStatus();
+	  if(int1_flag){
+		  IIS3DWB_Int_Measure();
+		  int1_flag = 0;
+	  }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -393,7 +398,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		//HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
 		//HAL_UART_Transmit(&huart2, (uint8_t*)msg_0, sizeof(msg_0), HAL_MAX_DELAY);
 		//IIS3DWB_MEASSURE();
-		IIS3DWB_Int_Measure();
+		//IIS3DWB_Int_Measure();
+		int1_flag = 1;
 	}
 }
 /* USER CODE END 4 */

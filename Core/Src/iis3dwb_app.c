@@ -28,8 +28,8 @@ int16_t tmpZ[128] = {0};
 //init driver interface
 //neccessary for iis3dwb driver (iis3dwb_reg)
 stmdev_ctx_t dev_ctx;
-volatile uint8_t reg0;
-volatile uint8_t reg1;
+uint8_t reg0;
+uint8_t reg1;
 volatile uint16_t fifo_level = 0;
 
 //dev_ctx.read_reg = IIS3DWB_READ_REG;
@@ -98,12 +98,15 @@ void static IIS3DWB_SET_CONFIG(){
     iis3dwb_i2c_interface_set(&dev_ctx, IIS3DWB_I2C_DISABLE);
 
     //5. Set fifo in continuous / stream mode 110
+    //001: FIFO mode: stops collecting data when FIFO is full;
     //110: Continuous mode: if the FIFO is full, the new sample overwrites the older one;
-    iis3dwb_fifo_mode_set(&dev_ctx, IIS3DWB_STREAM_MODE);
+//    iis3dwb_fifo_mode_set(&dev_ctx, IIS3DWB_STREAM_MODE);
+    iis3dwb_fifo_mode_set(&dev_ctx, IIS3DWB_FIFO_MODE);
 
     //6. Set watermark 128
     //IIS3DWB_FIFO_CTRL1 7:0 IIS3DWB_FIFO_CTRL2 bit 0
-    uint8_t IIS3DWB_WTM_LEVEL = 128;
+//    uint8_t IIS3DWB_WTM_LEVEL = 128;
+    uint8_t IIS3DWB_WTM_LEVEL = 20;
     iis3dwb_fifo_watermark_set(&dev_ctx, IIS3DWB_WTM_LEVEL);
 
     //7. Data Ready pulse mode
@@ -116,7 +119,7 @@ void static IIS3DWB_SET_CONFIG(){
     //8. Set full scale
     /* CTRL1_XL (10h) bit 3:2  00 (default) �2 g  01 �16 g 10 �4 g 11 �8 g*/
     // set scale to +- 2g
-    iis3dwb_xl_full_scale_set(&dev_ctx, IIS3DWB_2g);
+    iis3dwb_xl_full_scale_set(&dev_ctx, IIS3DWB_16g);
 
     /* 9. Set 2nd stage filter  output from first stage digital filtering selected
     * CTRL1_XL (10h) bit 0
@@ -133,31 +136,6 @@ void static IIS3DWB_SET_CONFIG(){
     **/
     iis3dwb_xl_hp_path_on_out_set(&dev_ctx,IIS3DWB_LP_ODR_DIV_20);
 
-
-
-    //11. Enable writing to FIFO
-    /* FIFO_CTRL3 (09h) bit 3:0 Selects Batch Data Rate (write frequency in FIFO) for accelerometer data.
-     * (0000: Accelerometer not batched in FIFO (default);
-     * 1010: 26667 Hz;
-     * */
-    iis3dwb_fifo_xl_batch_set(&dev_ctx, IIS3DWB_XL_BATCHED_AT_26k7Hz);
-
-
-	//Register CTRL3_C bit BDU: Disable block data update
-	iis3dwb_block_data_update_set(&dev_ctx, PROPERTY_ENABLE);
-
-	//set output data rate - enable acc
-	iis3dwb_xl_data_rate_set(&dev_ctx, IIS3DWB_XL_ODR_26k7Hz);
-
-	//enable auto increment
-	iis3dwb_auto_increment_set(&dev_ctx, PROPERTY_ENABLE);
-	//enable fifo bypass mode
-	iis3dwb_fifo_mode_set(&dev_ctx,IIS3DWB_BYPASS_MODE);
-	//use LP filter
-	iis3dwb_xl_filter_lp2_set(&dev_ctx, PROPERTY_ENABLE);
-	//enable all axis
-	//iis3dwb_xl_axis_selection_set(&dev_ctx,IIS3DWB_ENABLE_ALL);
-
     // 10. FIFO_WTM_IA routing on pin INT1
     /* INT1_CTRL (0Dh) bit 3 Set to 1
      * INT1_FIFO_TH Enables FIFO threshold interrupt on INT1 pin.
@@ -167,8 +145,37 @@ void static IIS3DWB_SET_CONFIG(){
     iis3dwb_pin_int1_route_t pin_int1_route;
     *(uint8_t*)&(pin_int1_route.int1_ctrl) = 0;
     *(uint8_t*)&(pin_int1_route.md1_cfg) = 0;
-    pin_int1_route.int1_ctrl.int1_drdy_xl = 1;
+//    pin_int1_route.int1_ctrl.int1_drdy_xl = 1;
+//    pin_int1_route.int1_ctrl.int1_fifo_th = 1;
+//    pin_int1_route.int1_ctrl.int1_cnt_bdr = 1;
+    pin_int1_route.int1_ctrl.int1_fifo_full = 1;
     iis3dwb_pin_int1_route_set(&dev_ctx, &pin_int1_route);
+
+    //11. Enable writing to FIFO
+    /* FIFO_CTRL3 (09h) bit 3:0 Selects Batch Data Rate (write frequency in FIFO) for accelerometer data.
+     * (0000: Accelerometer not batched in FIFO (default);
+     * 1010: 26667 Hz;
+     * */
+    iis3dwb_fifo_xl_batch_set(&dev_ctx, IIS3DWB_XL_BATCHED_AT_26k7Hz);
+
+    //Set the threshold value for Batch Data Rate, maximum 2^12-1
+//    uint16_t BDR_thresholdValue = 2045;
+//    iis3dwb_batch_counter_threshold_set(&dev_ctx,BDR_thresholdValue);
+
+	//Register CTRL3_C bit BDU: Disable block data update
+	//iis3dwb_block_data_update_set(&dev_ctx, PROPERTY_ENABLE);
+
+	//set output data rate - enable acc
+	//iis3dwb_xl_data_rate_set(&dev_ctx, IIS3DWB_XL_ODR_26k7Hz);
+
+	//enable auto increment
+	//iis3dwb_auto_increment_set(&dev_ctx, PROPERTY_ENABLE);
+	//enable fifo bypass mode
+	//iis3dwb_fifo_mode_set(&dev_ctx,IIS3DWB_BYPASS_MODE);
+	//use LP filter
+	//iis3dwb_xl_filter_lp2_set(&dev_ctx, PROPERTY_ENABLE);
+
+
 
     HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
@@ -212,7 +219,7 @@ void IIS3DWB_MEASSURE(){
 		acceleration_mg[1] = iis3dwb_from_fs2g_to_mg(tmp_1[1]);
 		acceleration_mg[2] = iis3dwb_from_fs2g_to_mg(tmp_1[2]);
 
-//		ftoa(acceleration_mg[0], msg_0, 2);
+		ftoa(acceleration_mg[0], msg_0, 2);
 //		HAL_UART_Transmit(&huart2, (uint8_t*)msg_0, sizeof(msg_0), HAL_MAX_DELAY);
 //		ftoa(acceleration_mg[1], msg_1, 2);
 //		HAL_UART_Transmit(&huart2, (uint8_t*)msg_1, sizeof(msg_1), HAL_MAX_DELAY);
@@ -232,9 +239,10 @@ void IIS3DWB_Int_Measure(){
     fifo_level = ((reg1 & 0x03) << 8) + reg0;
 
     uint16_t i = 0;
-    uint8_t mem_X[2] = {0};
-//    iis3dwb_read_reg(&dev_ctx, IIS3DWB_FIFO_DATA_OUT_X_L, (uint8_t *)iis3dwb_mem, IIS3DWB_SAMPLES_PER_IT * 7);
-    iis3dwb_read_reg(&dev_ctx, IIS3DWB_FIFO_DATA_OUT_X_L, (uint8_t *)mem_X, 2);
+    uint8_t mem_X[128*7] = {0};
+    iis3dwb_read_reg(&dev_ctx, IIS3DWB_FIFO_DATA_OUT_TAG, (uint8_t *)iis3dwb_mem, IIS3DWB_SAMPLES_PER_IT * 7);
+    iis3dwb_read_reg(&dev_ctx, IIS3DWB_OUTX_L_A, (uint8_t *)mem_X, IIS3DWB_SAMPLES_PER_IT * 7);
+//    iis3dwb_read_reg(&dev_ctx, IIS3DWB_OUTX_L_A, (uint8_t *)mem_X, 4);
 
 //    int16_t * p16src = (int16_t *)iis3dwb_mem;
 //    int16_t * p16dest = (int16_t *)iis3dwb_mem;
@@ -246,11 +254,25 @@ void IIS3DWB_Int_Measure(){
 //      tmpZ[i] = *p16src++;
 //    }
 
-    HAL_UART_Transmit(&huart2, (uint8_t*)mem_X[0], sizeof(mem_X[0]), HAL_MAX_DELAY);
-    HAL_UART_Transmit(&huart2, (uint8_t*)mem_X[1], sizeof(mem_X[1]), HAL_MAX_DELAY);
+    uint8_t reg2 = 0;
+    uint8_t reg3 = 0;
+    iis3dwb_read_reg(&dev_ctx, IIS3DWB_FIFO_STATUS1, &reg2, 1);
+    iis3dwb_read_reg(&dev_ctx, IIS3DWB_FIFO_STATUS2, &reg3, 1);
+    fifo_level = ((reg1 & 0x03) << 8) + reg0;
+
+//    HAL_UART_Transmit(&huart2, (uint8_t*)mem_X[0], sizeof(mem_X[0]), HAL_MAX_DELAY);
+//    HAL_UART_Transmit(&huart2, (uint8_t*)mem_X[1], sizeof(mem_X[1]), HAL_MAX_DELAY);
 //    HAL_UART_Transmit(&huart2, (uint8_t*)tmpY[0], sizeof(tmpY[0]), HAL_MAX_DELAY);
 //    HAL_UART_Transmit(&huart2, (uint8_t*)tmpZ[0], sizeof(tmpZ[0]), HAL_MAX_DELAY);
-//    tmp_2 = (int16_t*) iis3dwb[];
+    char someTxt[] = {"Now in interrupt"};
+    HAL_UART_Transmit(&huart2, (uint8_t*)someTxt, sizeof(someTxt), HAL_MAX_DELAY);
+//    uint8_t someNr[] = {10,11,12,13};
+//	char msg0[10] ;
+//	itoa(someNr[0],msg0,10);
+//    HAL_UART_Transmit(&huart2, (uint8_t*) msg0, sizeof(msg0), HAL_MAX_DELAY);
+	//enable fifo bypass mode
+	iis3dwb_fifo_mode_set(&dev_ctx,IIS3DWB_BYPASS_MODE);
+	iis3dwb_fifo_mode_set(&dev_ctx, IIS3DWB_FIFO_MODE);
 }
 
 //Function:	Init-Function for the IIS3DWB-sensor
